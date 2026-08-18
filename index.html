@@ -408,77 +408,83 @@
         </div>
     </div>
 
-    <!-- === JAVASCRIPT === -->
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        // Connect to backend
-        const socket = io();
+    <!-- JAVASCRIPT -->
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    // Connect to backend (FIXED FOR MOBILE)
+    const socket = io({ transports: ['polling'] });
 
-        // --- SIDEBAR LOGIC ---
-        function openSidebar() {
-            document.getElementById('sidebar').classList.add('open');
-            document.getElementById('overlay').classList.add('active');
-        }
-        function closeSidebar() {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('overlay').classList.remove('active');
-        }
+    // --- SIDEBAR LOGIC ---
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('overlay').classList.add('active');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('overlay').classList.remove('active');
+    }
 
-        // --- SAVE TOKENS ---
-        function saveTokens() {
-            const token1 = document.getElementById('token1').value;
-            const token2 = document.getElementById('token2').value;
-            const msg = document.getElementById('sidebarMsg');
+    // --- SAVE MULTIPLE TOKENS ---
+    function saveTokens() {
+        const rawText = document.getElementById('bulkTokens').value;
+        const msg = document.getElementById('sidebarMsg');
 
-            if(!token1 && !token2) {
-                alert("Please paste at least one token!");
-                return;
-            }
-
-            // Send tokens to your Node.js backend
-            socket.emit('save-tokens', { token1, token2 });
-
-            // Update sidebar status
-            msg.style.display = 'block';
-            msg.innerText = "✅ Sending to server...";
-
-            // If your backend confirms success, it will change the dashboard status automatically
+        if(!rawText) {
+            alert("Please paste at least one token!");
+            return;
         }
 
-        // --- BACKEND EVENTS ---
-        socket.on('bot-started', (data) => {
-            // Turn dashboard ONLINE
-            document.getElementById('statusDot').classList.add('online');
-            document.getElementById('statusLabel').innerText = 'ONLINE';
-            document.getElementById('statusLabel').classList.add('online');
-            document.getElementById('botCount').innerText = data.count || "1";
-            
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('sidebarMsg').innerText = "✅ Bot is now ONLINE!";
-        });
+        // Split text by new lines and filter out empty ones
+        const tokenList = rawText.split('\n').map(t => t.trim()).filter(t => t.length > 10);
 
-        socket.on('bot-stopped', () => {
-            document.getElementById('statusDot').classList.remove('online');
-            document.getElementById('statusLabel').innerText = 'OFFLINE';
-            document.getElementById('statusLabel').classList.remove('online');
-            document.getElementById('botCount').innerText = "0";
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('sidebarMsg').innerText = "Bot stopped.";
-        });
-
-        // --- UI BUTTONS ---
-        function startBot() {
-            // If no tokens were saved, prompt user
-            if(document.getElementById('botCount').innerText === "0") {
-                alert("Please open the top-left menu (☰) and save your tokens first!");
-            } else {
-                socket.emit('start-bot');
-            }
+        if(tokenList.length === 0) {
+            alert("No valid tokens found!");
+            return;
         }
 
-        function stopBot() {
-            socket.emit('stop-bot');
+        // Send the correct event name to the backend!
+        socket.emit('start_bot_with_tokens', { tokens: tokenList });
+
+        msg.style.display = 'block';
+        msg.innerText = `✅ Loaded ${tokenList.length} tokens! Starting bots...`;
+
+        // Auto-close sidebar after 1.5 seconds
+        setTimeout(() => {
+            closeSidebar();
+        }, 1500);
+    }
+
+    // --- BACKEND EVENTS ---
+    socket.on('bot-started', (data) => {
+        document.getElementById('statusDot').classList.add('online');
+        document.getElementById('statusLabel').innerText = 'ONLINE';
+        document.getElementById('statusLabel').classList.add('online');
+        document.getElementById('botCount').innerText = data.count || "1";
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('sidebarMsg').innerText = "✅ Bot is now ONLINE!";
+    });
+
+    socket.on('bot-stopped', () => {
+        document.getElementById('statusDot').classList.remove('online');
+        document.getElementById('statusLabel').innerText = 'OFFLINE';
+        document.getElementById('statusLabel').classList.remove('online');
+        document.getElementById('botCount').innerText = "0";
+        document.getElementById('startBtn').disabled = false;
+    });
+
+    // --- UI BUTTONS ---
+    function startBot() {
+        if(document.getElementById('botCount').innerText === "0") {
+            alert("Please open the menu (☰) and save tokens first!");
+        } else {
+            socket.emit('start_bots');
         }
+    }
+
+    function stopBot() {
+        socket.emit('stop_bots');
+    }
+</script>
 
         // Handle connection errors
         socket.on('connect_error', (err) => {
