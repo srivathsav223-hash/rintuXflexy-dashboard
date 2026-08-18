@@ -429,26 +429,32 @@ io.on('connection', (socket) => {
     });
     
     // Handle tokens from dashboard
-    socket.on('start_bot_with_tokens', (data) => {
-        const { tokens: newTokens } = data;
-        if (newTokens && newTokens.length > 0) {
-            dashboardTokens = [];
-            for (const t of newTokens) {
-                if (t && t.length > 10) {
-                    dashboardTokens.push(t);
-                }
+socket.on('start_bot_with_tokens', (data) => {
+    const { tokens: newTokens } = data;
+    if (newTokens && newTokens.length > 0) {
+        dashboardTokens = [];
+        for (const t of newTokens) {
+            if (t && t.length > 10) {
+                dashboardTokens.push(t);
             }
-            console.log(`🔄 Updated tokens from dashboard: ${dashboardTokens.length} tokens`);
-            startBots();
-        } else {
-            console.log('❌ No valid tokens received from dashboard');
         }
-    });
-    
-    socket.on('start_bots', () => startBots());
-    socket.on('stop_bots', () => stopBots());
+        console.log(`✅ Updated tokens from dashboard: ${dashboardTokens.length} tokens`);
+
+        // Only call startBots if it actually exists
+        if (typeof startBots === 'function') {
+            startBots();
+            // Tell the dashboard to turn ONLINE
+            io.emit('bot-started', { count: dashboardTokens.length });
+        } else {
+            console.log("⚠️ Warning: startBots() function not found! Bot cannot start.");
+        }
+    } else {
+        console.log('❌ No valid tokens received from dashboard');
+    }
 });
 
+socket.on('start_bots', () => startBots());
+socket.on('stop_bots', () => stopBots());
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
