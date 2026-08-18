@@ -1,0 +1,17 @@
+{
+  "name": "rintu-dashboard",
+  "version": "1.0.0",
+  "description": "🌸 RINTU DASHBOARD - Discord Self-Bot Controller",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.6.1",
+    "discord.js-selfbot-v13": "^3.0.0",
+    "@discordjs/voice": "^0.16.0",
+    "youtube-dl-exec": "^2.5.3",
+    "dotenv": "^16.0.3"
+  }
+}
