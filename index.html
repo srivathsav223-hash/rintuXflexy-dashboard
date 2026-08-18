@@ -336,23 +336,20 @@
 <body>
 
     <!-- === SIDEBAR MENU (TOP LEFT) === -->
-    <div class="menu-btn" onclick="openSidebar()"><i class="fas fa-bars"></i></div>
+<div class="menu-btn" onclick="openSidebar()"><i class="fas fa-bars"></i></div>
 
-    <div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
+    <div class="close-btn" onclick="closeSidebar()"><i class="fas fa-times-circle"></i></div>
+    <h2><i class="fas fa-cog"></i> Token Manager</h2>
     
-    <div class="sidebar" id="sidebar">
-        <div class="close-btn" onclick="closeSidebar()"><i class="fas fa-times-circle"></i></div>
-        <h2><i class="fas fa-cog"></i> Settings</h2>
-        
-        <label>Token 1 (Yours)</label>
-        <input type="password" id="token1" placeholder="Paste your token here...">
-        
-        <label>Token 2 (Friend)</label>
-        <input type="password" id="token2" placeholder="Paste friend's token here...">
-        
-        <button class="save-btn" onclick="saveTokens()"><i class="fas fa-save"></i> Save & Start Bot</button>
-        <div class="status-msg" id="sidebarMsg">✅ Tokens saved! Starting bot...</div>
-    </div>
+    <label>Paste ALL tokens here (1 per line):</label>
+    <textarea id="bulkTokens" rows="6" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: #0a0a1a; color: white; font-size: 14px; resize: vertical;" placeholder="TOKEN_1_HERE&#10;TOKEN_2_HERE&#10;TOKEN_3_HERE&#10;TOKEN_4_HERE&#10;TOKEN_5_HERE"></textarea>
+
+    <button class="save-btn" onclick="saveTokens()"><i class="fas fa-save"></i> Load Tokens & Start Bots</button>
+    <div class="status-msg" id="sidebarMsg">✅ Tokens saved! Starting bots...</div>
+</div>
 
     <!-- === MAIN DASHBOARD === -->
     <div class="container">
