@@ -429,7 +429,7 @@ io.on('connection', (socket) => {
     });
     
     // Handle tokens from dashboard
-    socket.on('start_bots_with_tokens', (data) => {
+    socket.on('start_bot_with_tokens', (data) => {
         const { tokens: newTokens } = data;
         if (newTokens && newTokens.length > 0) {
             dashboardTokens = [];
