@@ -1,13 +1,19 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const path = require('path');
 const { Client } = require('discord.js-selfbot-v13');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+// Show the dashboard to the world
 app.use(express.static(__dirname));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.use(express.json());
 
 let dashboardTokens = [];
@@ -53,4 +59,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 RINTU DASHBOARD LIVE at port ${PORT}`));
