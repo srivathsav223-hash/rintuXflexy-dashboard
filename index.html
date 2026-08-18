@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🌸 RINTU DASHBOARD</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -24,6 +25,8 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
+            position: relative;
+            overflow-x: hidden;
         }
 
         .container {
@@ -31,6 +34,56 @@
             width: 100%;
             margin: 0 auto;
         }
+
+        /* --- 3-LINE MENU & SIDEBAR --- */
+        .menu-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 26px;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            z-index: 1000;
+            transition: 0.3s;
+            background: rgba(22, 22, 50, 0.6);
+            padding: 10px 12px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .menu-btn:hover { color: #c084fc; background: rgba(22, 22, 50, 0.9); }
+
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+            z-index: 999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        
+        .sidebar {
+            position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
+            background: #12122b; border-right: 1px solid rgba(255,255,255,0.1);
+            z-index: 1001; padding: 30px 20px;
+            transition: 0.3s ease-in-out; box-shadow: 4px 0 30px rgba(0,0,0,0.5);
+        }
+        .sidebar.open { left: 0; }
+        
+        .close-btn { color: #f87171; font-size: 24px; text-align: right; cursor: pointer; margin-bottom: 30px; }
+        .sidebar h2 { color: #c084fc; text-align: center; margin-bottom: 25px; font-size: 22px; font-family: 'Orbitron', monospace; }
+        .sidebar label { display: block; color: rgba(255,255,255,0.5); font-size: 13px; margin-bottom: 5px; margin-top: 15px; }
+        .sidebar input {
+            width: 100%; padding: 12px; border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1); background: #0a0a1a;
+            color: #fff; font-size: 14px; margin-bottom: 5px; outline: none;
+        }
+        .sidebar input:focus { border-color: #c084fc; }
+        
+        .sidebar button.save-btn {
+            width: 100%; padding: 12px; margin-top: 20px; border-radius: 10px;
+            border: none; background: linear-gradient(135deg, #c084fc, #8b5cf6);
+            color: white; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .sidebar button.save-btn:hover { opacity: 0.9; transform: scale(1.02); }
+        .sidebar .status-msg { text-align: center; margin-top: 15px; font-size: 13px; color: #34d399; display: none; }
 
         /* Header */
         .header {
@@ -112,571 +165,329 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
+            margin-bottom: 16px;
         }
 
-        .status-left {
+        .status-indicator {
             display: flex;
             align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
         }
 
         .status-dot {
-            width: 14px;
-            height: 14px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            display: inline-block;
-            position: relative;
-            transition: all 0.3s;
+            background: #ef4444;
+            transition: all 0.3s ease;
         }
+        .status-dot.online { background: #34d399; box-shadow: 0 0 15px rgba(52, 211, 153, 0.3); }
 
-        .status-dot.online {
-            background: #34d399;
-            box-shadow: 0 0 20px rgba(52, 211, 153, 0.5);
-        }
+        .status-label { color: #ef4444; transition: color 0.3s; }
+        .status-label.online { color: #34d399; }
 
-        .status-dot.online::after {
-            content: '';
-            position: absolute;
-            inset: -4px;
-            border-radius: 50%;
-            border: 2px solid rgba(52, 211, 153, 0.2);
-            animation: ripple 2s ease-out infinite;
-        }
-
-        @keyframes ripple {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(1.8); opacity: 0; }
-        }
-
-        .status-dot.offline {
-            background: #f87171;
-            box-shadow: 0 0 20px rgba(248, 113, 113, 0.3);
-        }
-
-        .status-text {
-            font-weight: 600;
-            font-size: 1em;
-        }
-
-        .status-text.online { color: #34d399; }
-        .status-text.offline { color: #f87171; }
-
-        .status-badge {
-            font-size: 0.7em;
-            padding: 4px 14px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .status-badge span { color: #c084fc; font-weight: 600; }
-
-        /* Buttons */
-        .btn-group {
+        .stats {
             display: flex;
             gap: 10px;
-            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 16px;
         }
 
         .btn {
-            padding: 10px 24px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 14px;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
             font-weight: 600;
-            font-size: 0.85em;
+            font-size: 0.9em;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-family: 'Poppins', sans-serif;
-            letter-spacing: 0.5px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn:active { transform: scale(0.95); }
-
-        .btn-start {
-            background: linear-gradient(135deg, #34d399, #059669);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(52, 211, 153, 0.3);
-        }
-        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(52, 211, 153, 0.4); }
-
-        .btn-stop {
-            background: linear-gradient(135deg, #f87171, #dc2626);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(248, 113, 113, 0.3);
-        }
-        .btn-stop:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(248, 113, 113, 0.4); }
-
-        .btn-glow {
-            background: linear-gradient(135deg, #c084fc, #7c3aed);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(192, 132, 252, 0.3);
-        }
-        .btn-glow:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(192, 132, 252, 0.5); }
-
-        .btn-pink {
-            background: linear-gradient(135deg, #f472b6, #ec4899);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(244, 114, 182, 0.3);
-        }
-        .btn-pink:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(244, 114, 182, 0.4); }
-
-        .btn-cyan {
-            background: linear-gradient(135deg, #22d3ee, #06b6d4);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(34, 211, 238, 0.3);
-        }
-        .btn-cyan:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(34, 211, 238, 0.4); }
-
-        .btn-orange {
-            background: linear-gradient(135deg, #fb923c, #f59e0b);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(251, 146, 60, 0.3);
-        }
-        .btn-orange:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(251, 146, 60, 0.4); }
-
-        .btn-dark {
-            background: rgba(255, 255, 255, 0.06);
-            color: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
-        }
-        .btn-dark:hover { background: rgba(255, 255, 255, 0.12); transform: translateY(-2px); }
-
-        /* Now Playing */
-        .now-playing {
+            flex: 1;
+            max-width: 160px;
             display: flex;
             align-items: center;
-            gap: 16px;
-            padding: 14px 18px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 14px;
-            margin-top: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            justify-content: center;
+            gap: 8px;
         }
 
-        .now-playing .icon {
-            font-size: 2em;
-            animation: spin 3s linear infinite;
-            display: inline-block;
+        .btn-start {
+            background: linear-gradient(135deg, #34d399, #10b981);
+            color: #0a0a1a;
+            box-shadow: 0 4px 15px rgba(52, 211, 153, 0.3);
+        }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(52, 211, 153, 0.4); }
+        .btn-start:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
+
+        .btn-stop {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .btn-stop:hover { background: rgba(239, 68, 68, 0.25); }
+
+        /* Music Player */
+        .player {
+            text-align: center;
+            padding: 10px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 10px;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .now-playing .label {
-            font-size: 0.65em;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.3);
-        }
-
-        .now-playing .title {
-            font-weight: 600;
-            color: #e2e8f0;
-            font-size: 0.95em;
-            background: linear-gradient(135deg, #c084fc, #60a5fa);
+        .player-icon {
+            font-size: 3.5em;
+            margin-bottom: 5px;
+            background: linear-gradient(135deg, #c084fc, #8b5cf6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        /* Effects Badges */
-        .effects-wrap {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 3px 14px;
-            border-radius: 20px;
-            font-size: 0.65em;
-            font-weight: 600;
+        .player-label {
+            font-size: 0.7em;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            animation: fadeIn 0.3s ease;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 2px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.8); }
-            to { opacity: 1; transform: scale(1); }
+        .player-status {
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 400;
         }
+        .player-status span { color: #c084fc; }
 
-        .badge-bass { background: rgba(192, 132, 252, 0.2); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.2); }
-        .badge-blast { background: rgba(251, 146, 60, 0.2); color: #fb923c; border: 1px solid rgba(251, 146, 60, 0.2); }
-        .badge-pungi { background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.2); }
-        .badge-super { background: rgba(248, 113, 113, 0.2); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.2); }
-        .badge-force { background: rgba(244, 114, 182, 0.2); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.2); }
-        .badge-loop { background: rgba(34, 211, 238, 0.2); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.2); }
-        .badge-loud { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.2); }
-
-        /* Command Grid */
-        .cmd-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+        /* Commands */
+        .commands-title {
+            display: flex;
+            align-items: center;
             gap: 8px;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.75em;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
         }
 
         .cmd-btn {
-            padding: 10px 6px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
             background: rgba(255, 255, 255, 0.03);
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.7em;
-            cursor: pointer;
-            transition: all 0.25s ease;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 12px 5px;
             text-align: center;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
         .cmd-btn:hover {
-            background: rgba(192, 132, 252, 0.12);
-            border-color: rgba(192, 132, 252, 0.2);
+            background: rgba(192, 132, 252, 0.1);
+            border-color: rgba(192, 132, 252, 0.3);
             transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(192, 132, 252, 0.1);
         }
 
-        .cmd-btn .icon {
+        .cmd-btn i {
             font-size: 1.4em;
             display: block;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
+            color: rgba(255, 255, 255, 0.6);
         }
+        .cmd-btn:hover i { color: #c084fc; }
 
-        .cmd-btn .label {
+        .cmd-btn span {
             font-size: 0.7em;
-            opacity: 0.7;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 400;
         }
-
-        /* Input */
-        .input-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 4px;
-        }
-
-        .input-row input {
-            flex: 1;
-            padding: 14px 18px;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            background: rgba(0, 0, 0, 0.3);
-            color: #e2e8f0;
-            font-size: 0.9em;
-            font-family: 'Poppins', sans-serif;
-            transition: all 0.3s;
-            outline: none;
-        }
-
-        .input-row input:focus {
-            border-color: rgba(192, 132, 252, 0.3);
-            box-shadow: 0 0 30px rgba(192, 132, 252, 0.05);
-        }
-
-        .input-row input::placeholder {
-            color: rgba(255, 255, 255, 0.2);
-        }
-
-        /* Log */
-        .log-area {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 14px;
-            padding: 14px;
-            max-height: 260px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 0.75em;
-            line-height: 1.8;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        .log-area::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .log-area::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .log-area::-webkit-scrollbar-thumb {
-            background: rgba(192, 132, 252, 0.3);
-            border-radius: 10px;
-        }
-
-        .log-entry {
-            padding: 2px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-            animation: fadeIn 0.2s ease;
-        }
-
-        .log-entry .time {
-            color: rgba(255, 255, 255, 0.2);
-            margin-right: 10px;
-        }
-
-        .log-entry .cmd { color: #60a5fa; }
-        .log-entry .resp { color: #34d399; }
-        .log-entry .err { color: #f87171; }
-        .log-entry .sys { color: rgba(255, 255, 255, 0.3); }
 
         /* Responsive */
-        @media (max-width: 600px) {
-            .header h1 { font-size: 1.8em; }
-            .status-bar { flex-direction: column; align-items: stretch; }
-            .btn-group { justify-content: center; }
-            .status-left { justify-content: center; }
-            .cmd-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
-            .now-playing { flex-direction: column; text-align: center; }
-            .input-row { flex-direction: column; }
-            .btn { text-align: center; justify-content: center; }
+        @media (max-width: 500px) {
+            .header h1 { font-size: 2em; }
+            .commands-grid { grid-template-columns: repeat(3, 1fr); }
+            .controls .btn { max-width: 100%; }
+            .stats .stat-badge:last-child { display: none; }
         }
-
-        /* Scrollbar for whole page */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(192, 132, 252, 0.3); border-radius: 10px; }
     </style>
 </head>
 <body>
-<div class="container">
 
-    <!-- HEADER -->
-    <div class="header">
-        <h1>🌸 RINTU DASHBOARD</h1>
-        <div class="subtitle">✦ Discord Self-Bot Controller ✦</div>
-        <div class="glow-line"></div>
+    <!-- === SIDEBAR MENU (TOP LEFT) === -->
+    <div class="menu-btn" onclick="openSidebar()"><i class="fas fa-bars"></i></div>
+
+    <div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+    
+    <div class="sidebar" id="sidebar">
+        <div class="close-btn" onclick="closeSidebar()"><i class="fas fa-times-circle"></i></div>
+        <h2><i class="fas fa-cog"></i> Settings</h2>
+        
+        <label>Token 1 (Yours)</label>
+        <input type="password" id="token1" placeholder="Paste your token here...">
+        
+        <label>Token 2 (Friend)</label>
+        <input type="password" id="token2" placeholder="Paste friend's token here...">
+        
+        <button class="save-btn" onclick="saveTokens()"><i class="fas fa-save"></i> Save & Start Bot</button>
+        <div class="status-msg" id="sidebarMsg">✅ Tokens saved! Starting bot...</div>
     </div>
 
-    <!-- STATUS BAR -->
-    <div class="card">
-        <div class="status-bar">
-            <div class="status-left">
-                <span class="status-dot offline" id="statusDot"></span>
-                <span class="status-text offline" id="statusText">OFFLINE</span>
-                <span class="status-badge">🤖 <span id="botCount">0</span> bots</span>
-                <span class="status-badge">🔊 <span id="volDisplay">100</span>%</span>
+    <!-- === MAIN DASHBOARD === -->
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>RINTU</h1>
+            <h1 style="font-size:1.8em; margin-top:-15px;">DASHBOARD</h1>
+            <div class="subtitle">Discord Self-Bot Controller</div>
+            <div class="glow-line"></div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="card">
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span class="status-label" id="statusLabel">OFFLINE</span>
+                </div>
+                <div class="stats">
+                    <div class="stat-badge"><i class="fas fa-robot"></i> <span id="botCount">0</span> bots</div>
+                    <div class="stat-badge"><i class="fas fa-volume-up"></i> 100%</div>
+                </div>
             </div>
-            <div class="btn-group">
-                <button class="btn btn-start" id="startBtn">▶ START</button>
-                <button class="btn btn-stop" id="stopBtn">■ STOP</button>
+
+            <div class="controls">
+                <button class="btn btn-start" id="startBtn" onclick="startBot()"><i class="fas fa-play"></i> START</button>
+                <button class="btn btn-stop" id="stopBtn" onclick="stopBot()"><i class="fas fa-stop"></i> STOP</button>
+            </div>
+
+            <!-- Player -->
+            <div class="player">
+                <div class="player-icon"><i class="fas fa-music"></i></div>
+                <div class="player-label">Now Playing</div>
+                <div class="player-status"><span>✦</span> Ready to play</div>
             </div>
         </div>
 
-        <!-- Now Playing -->
-        <div class="now-playing">
-            <span class="icon">🎵</span>
-            <div style="flex:1;min-width:0;">
-                <div class="label">NOW PLAYING</div>
-                <div class="title" id="nowPlaying">✨ Ready to play</div>
+        <!-- Quick Commands -->
+        <div class="commands-title"><i class="fas fa-bolt"></i> Quick Commands</div>
+        <div class="card">
+            <div class="commands-grid">
+                <div class="cmd-btn"><i class="fas fa-stop-circle"></i><span>Stop</span></div>
+                <div class="cmd-btn"><i class="fas fa-pause-circle"></i><span>Pause</span></div>
+                <div class="cmd-btn"><i class="fas fa-play-circle"></i><span>Resume</span></div>
+                <div class="cmd-btn"><i class="fas fa-fire"></i><span>Blast</span></div>
+                <div class="cmd-btn"><i class="fas fa-bomb"></i><span>Double</span></div>
+                <div class="cmd-btn"><i class="fas fa-volume-up"></i><span>Super</span></div>
+                <div class="cmd-btn"><i class="fas fa-bolt"></i><span>Force</span></div>
+                <div class="cmd-btn"><i class="fas fa-music"></i><span>Bass</span></div>
+                <div class="cmd-btn"><i class="fas fa-snake"></i><span>Pungi</span></div>
+                <div class="cmd-btn"><i class="fas fa-volume-off"></i><span>Loud</span></div>
+                <div class="cmd-btn"><i class="fas fa-sync-alt"></i><span>Loop</span></div>
+                <div class="cmd-btn"><i class="fas fa-sign-out-alt"></i><span>Leave</span></div>
+                <div class="cmd-btn"><i class="fas fa-skull"></i><span>Max</span></div>
+                <div class="cmd-btn"><i class="fas fa-chart-bar"></i><span>Status</span></div>
             </div>
-            <div class="effects-wrap" id="effectsWrap"></div>
         </div>
     </div>
 
-    <!-- QUICK COMMANDS -->
-    <div class="card">
-        <div class="card-title">⚡ Quick Commands</div>
-        <div class="cmd-grid">
-            <button class="cmd-btn" data-cmd="stop"><span class="icon">⏹️</span><span class="label">Stop</span></button>
-            <button class="cmd-btn" data-cmd="pause"><span class="icon">⏸️</span><span class="label">Pause</span></button>
-            <button class="cmd-btn" data-cmd="resume"><span class="icon">▶️</span><span class="label">Resume</span></button>
-            <button class="cmd-btn" data-cmd="blast"><span class="icon">🔥</span><span class="label">Blast</span></button>
-            <button class="cmd-btn" data-cmd="doubleblast"><span class="icon">💥</span><span class="label">Double</span></button>
-            <button class="cmd-btn" data-cmd="superloud"><span class="icon">🔊</span><span class="label">Super</span></button>
-            <button class="cmd-btn" data-cmd="forceloud"><span class="icon">⚡</span><span class="label">Force</span></button>
-            <button class="cmd-btn" data-cmd="bassboost"><span class="icon">🎵</span><span class="label">Bass</span></button>
-            <button class="cmd-btn" data-cmd="pungi"><span class="icon">🐍</span><span class="label">Pungi</span></button>
-            <button class="cmd-btn" data-cmd="loudmode"><span class="icon">📢</span><span class="label">Loud</span></button>
-            <button class="cmd-btn" data-cmd="loop"><span class="icon">🔄</span><span class="label">Loop</span></button>
-            <button class="cmd-btn" data-cmd="leave"><span class="icon">👋</span><span class="label">Leave</span></button>
-            <button class="cmd-btn" data-cmd="max"><span class="icon">💀</span><span class="label">Max</span></button>
-            <button class="cmd-btn" data-cmd="status"><span class="icon">📊</span><span class="label">Status</span></button>
-        </div>
-    </div>
+    <!-- === JAVASCRIPT === -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Connect to backend
+        const socket = io();
 
-    <!-- CUSTOM COMMAND -->
-    <div class="card">
-        <div class="card-title">⌨️ Custom Command</div>
-        <div class="input-row">
-            <input id="cmdInput" placeholder='play https://youtube.com/... or channel_id'>
-            <button class="btn btn-glow" id="sendBtn">Send ✦</button>
-        </div>
-    </div>
-
-    <!-- LOG -->
-    <div class="card">
-        <div class="card-title">📋 Activity Log</div>
-        <div class="log-area" id="logArea">
-            <div class="log-entry"><span class="time">[✦]</span> <span class="sys">RINTU DASHBOARD ready. Press START to begin.</span></div>
-        </div>
-    </div>
-
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
-<script>
-const socket = io();
-const logArea = document.getElementById('logArea');
-const statusDot = document.getElementById('statusDot');
-const statusText = document.getElementById('statusText');
-const botCount = document.getElementById('botCount');
-const volDisplay = document.getElementById('volDisplay');
-const nowPlaying = document.getElementById('nowPlaying');
-const effectsWrap = document.getElementById('effectsWrap');
-
-function addLog(msg, type = 'sys') {
-    const time = new Date().toLocaleTimeString();
-    const entry = document.createElement('div');
-    entry.className = 'log-entry';
-    entry.innerHTML = `<span class="time">[${time}]</span> <span class="${type}">${msg}</span>`;
-    logArea.appendChild(entry);
-    logArea.scrollTop = logArea.scrollHeight;
-}
-
-function updateStatus(running, count, title, vol) {
-    statusDot.className = `status-dot ${running ? 'online' : 'offline'}`;
-    statusText.className = `status-text ${running ? 'online' : 'offline'}`;
-    statusText.textContent = running ? 'ONLINE' : 'OFFLINE';
-    botCount.textContent = count || 0;
-    if (vol !== undefined) volDisplay.textContent = Math.round(vol);
-    if (title && title !== 'Nothing playing') {
-        nowPlaying.textContent = title;
-    } else if (!title || title === 'Nothing playing') {
-        nowPlaying.textContent = '✨ Ready to play';
-    }
-}
-
-function updateEffects(data) {
-    const map = [
-        ['bassboost', '🎵 Bass', 'badge-bass'],
-        ['blast', '🔥 Blast', 'badge-blast'],
-        ['pungi', '🐍 Pungi', 'badge-pungi'],
-        ['superLoudMode', '🔊 Super', 'badge-super'],
-        ['forceLoudMode', '⚡ Force', 'badge-force'],
-        ['loopMode', '🔄 Loop', 'badge-loop'],
-        ['loudMode', '📢 Loud', 'badge-loud']
-    ];
-    effectsWrap.innerHTML = '';
-    for (const [key, label, cls] of map) {
-        if (data[key]) {
-            const badge = document.createElement('span');
-            badge.className = `badge ${cls}`;
-            badge.textContent = label;
-            effectsWrap.appendChild(badge);
+        // --- SIDEBAR LOGIC ---
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('overlay').classList.add('active');
         }
-    }
-}
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('overlay').classList.remove('active');
+        }
 
-// Socket events
-socket.on('status_update', (d) => {
-    updateStatus(d.isRunning, d.botCount, d.currentTitle, d.volume);
-    updateEffects(d);
-});
+        // --- SAVE TOKENS ---
+        function saveTokens() {
+            const token1 = document.getElementById('token1').value;
+            const token2 = document.getElementById('token2').value;
+            const msg = document.getElementById('sidebarMsg');
 
-socket.on('bots_started', (d) => {
-    addLog(`🚀 ${d.count} bots started successfully`, 'resp');
-    updateStatus(true, d.count);
-});
+            if(!token1 && !token2) {
+                alert("Please paste at least one token!");
+                return;
+            }
 
-socket.on('bots_stopped', () => {
-    addLog('⛔ All bots stopped', 'err');
-    updateStatus(false, 0);
-});
+            // Send tokens to your Node.js backend
+            socket.emit('save-tokens', { token1, token2 });
 
-socket.on('bot_status', (d) => {
-    addLog(`🤖 Bot ${d.index}: ${d.tag} — ${d.status}`, 'resp');
-});
+            // Update sidebar status
+            msg.style.display = 'block';
+            msg.innerText = "✅ Sending to server...";
 
-socket.on('audio_update', (d) => {
-    if (d.title) nowPlaying.textContent = d.title;
-    if (d.volume) volDisplay.textContent = Math.round(d.volume);
-    if (d.status === 'playing') addLog(`▶️ Playing: ${d.title}`, 'resp');
-});
+            // If your backend confirms success, it will change the dashboard status automatically
+        }
 
-socket.on('command_response', (d) => {
-    const isErr = d.response.includes('❌') || d.response.includes('Error') || d.response.includes('error');
-    addLog(`✦ ${d.command} → ${d.response}`, isErr ? 'err' : 'resp');
-});
-
-// Buttons
-document.getElementById('startBtn').onclick = () => {
-    socket.emit('start_bots');
-    addLog('🚀 Starting bots...', 'sys');
-};
-
-document.getElementById('stopBtn').onclick = () => {
-    socket.emit('stop_bots');
-    addLog('⛔ Stopping bots...', 'sys');
-};
-
-async function sendCmd(cmd) {
-    if (!cmd) return;
-    try {
-        const res = await fetch('/api/command', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ command: cmd })
+        // --- BACKEND EVENTS ---
+        socket.on('bot-started', (data) => {
+            // Turn dashboard ONLINE
+            document.getElementById('statusDot').classList.add('online');
+            document.getElementById('statusLabel').innerText = 'ONLINE';
+            document.getElementById('statusLabel').classList.add('online');
+            document.getElementById('botCount').innerText = data.count || "1";
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('sidebarMsg').innerText = "✅ Bot is now ONLINE!";
         });
-        const data = await res.json();
-        if (data.response) {
-            const isErr = data.response.includes('❌') || data.response.includes('Error');
-            addLog(`✦ ${cmd} → ${data.response}`, isErr ? 'err' : 'resp');
+
+        socket.on('bot-stopped', () => {
+            document.getElementById('statusDot').classList.remove('online');
+            document.getElementById('statusLabel').innerText = 'OFFLINE';
+            document.getElementById('statusLabel').classList.remove('online');
+            document.getElementById('botCount').innerText = "0";
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('sidebarMsg').innerText = "Bot stopped.";
+        });
+
+        // --- UI BUTTONS ---
+        function startBot() {
+            // If no tokens were saved, prompt user
+            if(document.getElementById('botCount').innerText === "0") {
+                alert("Please open the top-left menu (☰) and save your tokens first!");
+            } else {
+                socket.emit('start-bot');
+            }
         }
-    } catch (e) {
-        addLog(`❌ ${e.message}`, 'err');
-    }
-}
 
-document.getElementById('sendBtn').onclick = () => {
-    const inp = document.getElementById('cmdInput');
-    sendCmd(inp.value.trim());
-    inp.value = '';
-};
-
-document.getElementById('cmdInput').onkeypress = (e) => {
-    if (e.key === 'Enter') document.getElementById('sendBtn').click();
-};
-
-// Quick command buttons
-document.querySelectorAll('.cmd-btn').forEach(btn => {
-    btn.onclick = async () => {
-        const cmd = btn.dataset.cmd;
-        if (cmd === 'play') {
-            const url = prompt('🎵 Enter YouTube URL or audio URL:');
-            if (url) await sendCmd(`play ${url}`);
-            return;
+        function stopBot() {
+            socket.emit('stop-bot');
         }
-        await sendCmd(cmd);
-    };
-});
 
-// Initial status
-fetch('/api/status').then(r => r.json()).then(d => {
-    updateStatus(d.isRunning, d.botCount, d.currentTitle, d.volume);
-    updateEffects(d);
-}).catch(console.error);
-
-// Poll for effects updates
-setInterval(() => {
-    fetch('/api/status').then(r => r.json()).then(d => {
-        updateEffects(d);
-        if (d.currentTitle && d.currentTitle !== 'Nothing playing') {
-            nowPlaying.textContent = d.currentTitle;
-        }
-        if (d.volume !== undefined) volDisplay.textContent = Math.round(d.volume);
-    }).catch(console.error);
-}, 3000);
-
-</script>
+        // Handle connection errors
+        socket.on('connect_error', (err) => {
+            console.error("Connection failed. Is the backend running?", err);
+        });
+    </script>
 </body>
-  </html>
+</html>
